@@ -3,20 +3,20 @@
 #include <string.h>
 #include <ctype.h>
 
-//Levy definitions
+//----Levy definitions
 #define SLIP_COST 12.5
 #define LAND_COST 14
 #define TRAILOR_COST 25
 #define STORAGE_COST 11.2
 
-//Maximum definitions
+//----Maximum definitions
 #define MAX_CSV_LINE_LENGTH 1024
 #define MAX_BOATS 120
 #define MAX_BOAT_NAME_LENGTH 127
 #define MAX_BOAT_LENGTH 100
 #define TRAILOR_TAG_LENGTH 6
 
-//Data types
+//-----Data types
 typedef char BoatName[MAX_BOAT_NAME_LENGTH];
 typedef char CSVLine[MAX_CSV_LINE_LENGTH];
 typedef char TrailorTag[TRAILOR_TAG_LENGTH];
@@ -44,7 +44,7 @@ typedef Boat *BoatPointer;
 typedef BoatPointer BoatPointers[MAX_BOATS];
 
 
-//----Convert a string to a place
+/* Convert a string to a place */
 PlaceType StringToPlaceType(char *PlaceString) {
     if (!strcasecmp(PlaceString,"slip")) {
         return(slip);
@@ -61,7 +61,7 @@ PlaceType StringToPlaceType(char *PlaceString) {
     return(no_place);
 }
 
-//----Convert a place to a string
+/* Convert a place to a string */
 char *PlaceToString(PlaceType Place) {
     switch (Place) {
         case slip:
@@ -81,20 +81,24 @@ char *PlaceToString(PlaceType Place) {
     }
 }
 
-/*Function to add a new boat to the boat pointers array based on the
-information from a line in a CSV file*/
+/*
+   Function to add a new boat to the boat pointers array based on the
+   information from a line in a CSV file.
+*/
 void addBoatFromCSVLine(BoatPointers boatPtrs,int *count,CSVLine line) {
-    /*Check that max boats has not been reached and memory can be allocated for
-    the new boat.*/
+    /*
+       Check that max boats has not been reached and memory can be allocated for
+       the new boat.
+    */
     if (*count == MAX_BOATS) {
         printf("Maximum boats reached.");
-	return;
+        return;
     }
 
     boatPtrs[*count] = (BoatPointer) malloc(sizeof(Boat));
     if (boatPtrs[*count] == NULL) {
         printf("Failed to allocate memory for new boat.");
-	return;
+        return;
     }
 
     //Interpret CSV line
@@ -107,29 +111,29 @@ void addBoatFromCSVLine(BoatPointers boatPtrs,int *count,CSVLine line) {
     char *token = strtok(line,",");
     if (token == NULL) {
         printf("Invalid syntax in CSV file.");
-	free(boatPtrs[*count]);
-	return;
+        free(boatPtrs[*count]);
+        return;
     }
     strcpy(name,token);
     token = strtok(NULL,",");
     if (token == NULL) {
         printf("Invalid syntax in CSV file.");
-	free(boatPtrs[*count]);
-	return;
+        free(boatPtrs[*count]);
+        return;
     }
     length = atoi(token);
     token = strtok(NULL,",");
     if (token == NULL) {
         printf("Invalid syntax in CSV file.");
-	free(boatPtrs[*count]);
-	return;
+        free(boatPtrs[*count]);
+        return;
     }
     placeType = StringToPlaceType(token);
     token = strtok(NULL,",");
     if (token == NULL) {
         printf("Invalid syntax in CSV file.");
-	free(boatPtrs[*count]);
-	return;
+        free(boatPtrs[*count]);
+        return;
     }
     if (placeType == slip)
         placeID.slipID = atoi(token);
@@ -142,8 +146,8 @@ void addBoatFromCSVLine(BoatPointers boatPtrs,int *count,CSVLine line) {
     token = strtok(NULL,",");
     if (token == NULL) {
         printf("Invalid syntax in CSV file.");
-	free(boatPtrs[*count]);
-	return;
+        free(boatPtrs[*count]);
+        return;
     }
     moneyOwed = atof(token);
 
@@ -171,40 +175,43 @@ int compareBoats(const void *a,const void *b) {
     return strcmp((*boatPtrA)->name,(*boatPtrB)->name);
 }
 
-/* Function to sort the boats by name (alphabetical order), then display all of
- * their information.*/
+/*
+   Function to sort the boats by name (alphabetical order), then display all of
+   their information.
+*/
 void printInventory(BoatPointers boatPtrs,const int count) { 
-    //Sort boatPtrs
     qsort(boatPtrs,count,sizeof(BoatPointer),compareBoats);
-	
+
     TrailorTag placeIDOutput; //string with max length 6
     int Index;
     for (Index = 0;Index < count;Index++) {
         //Interpret the place type and ID
-	if (boatPtrs[Index]->placeType == slip) {
+        if (boatPtrs[Index]->placeType == slip) {
             sprintf(placeIDOutput,"# %d",boatPtrs[Index]->placeID.slipID);
         } else if (boatPtrs[Index]->placeType == land) {
             placeIDOutput[0] = boatPtrs[Index]->placeID.landID;
-	    placeIDOutput[1] = '\0';
+            placeIDOutput[1] = '\0';
         } else if (boatPtrs[Index]->placeType == trailor) {
             strcpy(placeIDOutput,boatPtrs[Index]->placeID.trailorTag);
-	} else if (boatPtrs[Index]->placeType == storage) {
+        } else if (boatPtrs[Index]->placeType == storage) {
             sprintf(placeIDOutput,"# %d",boatPtrs[Index]->placeID.storageSpace);
         } else {
             printf("Invalid place type.");
-	    return;
+            return;
         }
 
 
-	//Print all of the boat info
+        //Print all of the boat info
         printf("%-21s %d\' %7s %6s   Owes $%7.2lf\n",boatPtrs[Index]->name,
 boatPtrs[Index]->length,PlaceToString(boatPtrs[Index]->placeType),
 placeIDOutput,boatPtrs[Index]->moneyOwed);
     }
 }
 
-/* Function to find the index of a specific boat in the BoatPointers array by
- * name. */
+/*
+   Function to find the index of a specific boat in the BoatPointers array by
+   name.
+*/
 int findBoatIndex(BoatPointers boatPtrs,const int count,BoatName name) {
     int boatIndex;
     for (boatIndex = 0;boatIndex < count;boatIndex++) {
@@ -215,13 +222,16 @@ int findBoatIndex(BoatPointers boatPtrs,const int count,BoatName name) {
     //Handle if boat not found by name
     if (boatIndex == count) {
         printf("No boat with that name\n");
-	return -1;
+        return -1;
     }
 
     return boatIndex;
 }
-/* Function for removing a boat from the array based on its name. If the name
- * is not found, this function will inform the user. */
+
+/*
+   Function for removing a boat from the array based on its name. If the name
+   is not found, this function will inform the user.
+*/
 void removeBoat(BoatPointers boatPtrs,int *count,BoatName name) {
     int boatIndex = findBoatIndex(boatPtrs,*count,name);
     if (boatIndex == -1)
@@ -237,6 +247,10 @@ void removeBoat(BoatPointers boatPtrs,int *count,BoatName name) {
     (*count)--;
 }
 
+/*
+   Function for accepting a payment for a boat based on its name. If the name
+   is valid, this method will prompt the user for the amount.
+*/
 void acceptPayment(BoatPointers boatPtrs,int *count,BoatName name) {
     int boatIndex = findBoatIndex(boatPtrs,*count,name);
     if (boatIndex == -1)
@@ -252,26 +266,29 @@ void acceptPayment(BoatPointers boatPtrs,int *count,BoatName name) {
     double moneyOwed = boatPtrs[boatIndex]->moneyOwed;
     if (payment > moneyOwed) {
         printf("That is more than the amount owed, $%.2f\n",moneyOwed);
-	return;
+        return;
     } else {
         boatPtrs[boatIndex]->moneyOwed -= payment;
     }
 }
 
-/* Function for updating the amount owed by each boat to the marina assuming
- * a new month has passed. These rates are determined by the levy definition
- * constants listed at the top of this C file. */
+/*
+   Function for updating the amount owed by each boat to the marina assuming
+   a new month has passed. These rates are determined by the levy definition
+   constants listed at the top of this C file.
+*/
 void updateAmounts(BoatPointers boatPtrs,const int count) {
     int Index;
     int length;
     PlaceType placeType;
+
     for (Index = 0;Index < count;Index++) {
         length = boatPtrs[Index]->length;
         placeType = boatPtrs[Index]->placeType;
 
         if (placeType == slip) {
             boatPtrs[Index]->moneyOwed += (length*SLIP_COST);
-	} else if (placeType == land) {
+        } else if (placeType == land) {
             boatPtrs[Index]->moneyOwed += (length*LAND_COST);
         } else if (placeType == trailor) {
             boatPtrs[Index]->moneyOwed += (length*TRAILOR_COST);
@@ -286,7 +303,7 @@ int main(int argc,char *argv[]) {
     //Start by importing data from the CSV file
     if (argc != 2) {
         printf("Invalid number of arguments specified.\n");
-	return EXIT_FAILURE;
+        return EXIT_FAILURE;
     }
 
     BoatPointers boatPtrs;
@@ -301,15 +318,15 @@ int main(int argc,char *argv[]) {
             line[charCount] = (char) C1;
             charCount++;
             //Process line from CSV
-	    if (C1 == '\n') {
-		line[charCount-1] = '\0'; 
+            if (C1 == '\n') {
+                line[charCount-1] = '\0'; 
                 addBoatFromCSVLine(boatPtrs,&count,line);
-	        charCount = 0;
+                charCount = 0;
             }
-	}
+        }
     } else {
         printf("Unable to read CSV file.\n");
-	return EXIT_FAILURE;
+        return EXIT_FAILURE;
     }
 
     fclose(CSV);
@@ -323,34 +340,33 @@ int main(int argc,char *argv[]) {
     do {
         printf("\n(I)nventory, (A)dd, (R)emove, (P)ayment, (M)onth, e(X)it : ");
         C2 = getchar();
-        while (getchar() != '\n'); /*only take one 
-character, clear the rest of the buffer. */
+        while (getchar() != '\n'); //clear buffer
 
-	//Handle commands
-	if (tolower(C2) == 'i') { //print inventory
+        //Handle commands
+        if (tolower(C2) == 'i') { //print inventory
             printInventory(boatPtrs,count);
-	} else if (tolower(C2) == 'a') { //add boat
+        } else if (tolower(C2) == 'a') { //add boat
             printf("Please enter the boat data in CSV format                 : ");
             fgets(line,sizeof(line),stdin);
             line[strlen(line)-1] = '\0'; //replace newline with end of string
             addBoatFromCSVLine(boatPtrs,&count,line);
-	} else if (tolower(C2) == 'r') { //remove boat
+        } else if (tolower(C2) == 'r') { //remove boat
             printf("Please enter the boat name                               : ");
             fgets(boatName,sizeof(boatName),stdin);
             boatName[strlen(boatName)-1] = '\0';
             removeBoat(boatPtrs,&count,boatName);
-	} else if (tolower(C2) == 'p') { //accept a payment for the boat
+        } else if (tolower(C2) == 'p') { //accept a payment for the boat
             printf("Please enter the boat name                               : ");
             fgets(boatName,sizeof(boatName),stdin);
             boatName[strlen(boatName)-1] = '\0';
             acceptPayment(boatPtrs,&count,boatName);
         } else if (tolower(C2) == 'm') { //update amounts owed for a new month
             updateAmounts(boatPtrs,count);
-	} else if (tolower(C2) == 'x') {
-            // exit menu
-	} else {
+        } else if (tolower(C2) == 'x') {
+            //exit menu
+        } else {
             printf("Invalid option %c\n",C2);
-	}
+        }
     } while (tolower(C2) != 'x');
 
     printf("\nExiting the Boat Management System\n");
@@ -363,9 +379,9 @@ character, clear the rest of the buffer. */
             //convert placeID to string for output
             if (boatPtrs[Index]->placeType == slip) {
                 sprintf(placeID,"%d",boatPtrs[Index]->placeID.slipID);
-	    } else if (boatPtrs[Index]->placeType == land) {
+            } else if (boatPtrs[Index]->placeType == land) {
                 placeID[0] = boatPtrs[Index]->placeID.landID;
-		placeID[1] = '\0';
+                placeID[1] = '\0';
             } else if (boatPtrs[Index]->placeType == trailor) {
                 strncpy(placeID,boatPtrs[Index]->placeID.trailorTag,sizeof(placeID));
             } else if (boatPtrs[Index]->placeType == storage) {
